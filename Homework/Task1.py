@@ -40,9 +40,8 @@ for page in range(0, last_page):
         vacancy_items = parsed_html.find('div', {'data-qa': 'vacancy-serp__results'}).find_all('div', {'class': 'vacancy-serp-item'})
 
         for item in vacancy_items:
-            print(item)
             vacancy = {}
-            vacancy_name = item.find('div', {'class': 'resume-search-item__name'}).getText().replace(u'\xa0', u' ')
+            vacancy_name = item.find('a', {'data-qa': 'vacancy-serp__vacancy-title'}).getText().replace(u'\xa0', u' ')
             vacancy['vacancy_name'] = vacancy_name
             salary = item.find('div', {'class': 'vacancy-serp-item__compensation'})
             if not salary:
@@ -65,12 +64,10 @@ for page in range(0, last_page):
             vacancy['salary_min'] = salary_min
             vacancy['salary_max'] = salary_max
             vacancy['salary_currency'] = salary_currency
-            is_ad = item.find('span',
-                              {'class': 'vacancy-serp-item__controls-item vacancy-serp-item__controls-item_last'}).getText()
-            vacancy_link = item.find('div', {'class': 'resume-search-item__name'}).find('a')['href']
-            if is_ad != 'Реклама':
-                vacancy_link = vacancy_link.split('?')[0]
-            vacancy['vacancy_link'] = vacancy_link
+            try:
+                vacancy['vacancy_link'] = item.find('div', {'class': 'resume-search-item__name'}).find('a')['href']
+            except:
+                vacancy['vacancy_link'] = 'ad'
             vacancy['site'] = 'hh.ru'
             vacancy_date.append(vacancy)
 df = pd.DataFrame(vacancy_date)
