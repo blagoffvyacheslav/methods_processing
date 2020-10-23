@@ -1,11 +1,11 @@
 from bs4 import BeautifulSoup as bs
 import requests
 import re
-import pandas as pd
+from pymongo import MongoClient
+client = MongoClient('127.0.0.1', 27017)
+collection = client.db['hh3']
 
 TITLE = 'Python'
-
-vacancy_date = []
 
 params = {
     'text': TITLE,
@@ -43,7 +43,7 @@ for page in range(0, last_page):
             vacancy = {}
             vacancy_name = item.find('a', {'data-qa': 'vacancy-serp__vacancy-title'}).getText().replace(u'\xa0', u' ')
             vacancy['vacancy_name'] = vacancy_name
-            salary = item.find('div', {'class': 'vacancy-serp-item__compensation'})
+            salary = item.find('span', {'data-qa': 'vacancy-serp__vacancy-compensation'})
             if not salary:
                 salary_min = None
                 salary_max = None
@@ -65,10 +65,14 @@ for page in range(0, last_page):
             vacancy['salary_max'] = salary_max
             vacancy['salary_currency'] = salary_currency
             try:
-                vacancy['vacancy_link'] = item.find('div', {'class': 'resume-search-item__name'}).find('a')['href']
+                vacancy['vacancy_link'] = item.find('span', {'class': 'resume-search-item__name'}).find('a')['href']
             except:
                 vacancy['vacancy_link'] = 'ad'
             vacancy['site'] = 'hh.ru'
-            vacancy_date.append(vacancy)
-df = pd.DataFrame(vacancy_date)
-print(df)
+            # Check vacancy link
+            if collection.find_one({'vacancy_link': {"$in": [vacancy['vacancy_link']]}}):
+                print('The old one')
+                collection.update_one({'vacancy_link': vacancy['vacancy_link']}, {'$set': vacancy})
+            else:
+                print('A new one')
+                collection.insert_one(vacancy)
