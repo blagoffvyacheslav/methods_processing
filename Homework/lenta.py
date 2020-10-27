@@ -1,6 +1,9 @@
+from pymongo import MongoClient
+from datetime import datetime
 from lxml import html
 import requests
-from datetime import datetime
+client = MongoClient('127.0.0.1', 27017)
+collection = client.db['lenta']
 
 news = []
 

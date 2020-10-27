@@ -1,6 +1,9 @@
+from pymongo import MongoClient
+from datetime import datetime
 from lxml import html
 import requests
-from datetime import datetime
+client = MongoClient('127.0.0.1', 27017)
+collection = client.db['mail']
 
 news = []
 
@@ -16,24 +19,18 @@ link_mail_ru = 'https://news.mail.ru/'
 request = requests.get(link_mail_ru, headers=headers)
 root = html.fromstring(request.text)
 
-news_links = root.xpath('''(//li[@class="list__item"]  |  
-                                //div[@class =  "news-item__inner"])
+news_links = root.xpath('''(//li[@class='list__item']//span['@list__text']  |  
+                                //div[contains(@class, "daynews__item")])
                                 /a[contains(@href, "news.mail.ru")]/@href''')
 
-news_text = root.xpath('''(//div[@class =  "news-item o-media news-item_media news-item_main"]//h3  |  
-                               //div[@class =  "news-item__inner"]/a[contains(@href, "news.mail.ru")])
+
+news_text = root.xpath('''(//li[@class='list__item']//span['@list__text']/a/span  |  
+                               //div[contains(@class, "daynews__item")]//a//span[contains(@class, 'photo__title')])
                                /text()''')
 
 for i in range(len(news_text)):
     news_text[i] = news_text[i].replace(u'\xa0', u' ')
 
-news_links_temp = []
-for item in news_links:
-    item = item.split('/')
-    news_links_temp.append('/'.join(item[0:5]))
-
-news_links = news_links_temp
-del (news_links_temp)
 
 news_date = []
 
@@ -53,6 +50,7 @@ for item in list(zip(news_text, news_date, news_links)):
 
     news_dict['source'] = 'mail.ru'
     news.append(news_dict)
+    collection.insert_one(news_dict)
 
 print('Collected!')
 for item in news:
