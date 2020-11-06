@@ -13,14 +13,14 @@ def parse_props(value):
         sel_list = r.xpath('//div[@class = "def-list__group"]')
         result = {}
         for selector in sel_list:
-            k = selector.xpath('.//dt/text()').extract_first()
-            v_str = selector.xpath('.//dd/text()').extract_first()
-            v_str = ''.join(i.strip().replace(',', '.') for i in v_str.split('\n'))
+            val = selector.xpath('.//dt/text()').extract_first()
+            val2 = selector.xpath('.//dd/text()').extract_first()
+            val2 = ''.join(i.strip().replace(',', '.') for i in val2.split('\n'))
             try:
-                v = float(v_str)
+                v = float(val2)
             except ValueError:
-                v = v_str
-            result[k] = v
+                v = val2
+            result[val] = v
         value = result
         return value
 
